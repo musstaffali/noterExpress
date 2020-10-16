@@ -1,24 +1,72 @@
 const path = require("path");
+const fs = require("fs");
 const express = require("express");
-const { console } = require("console");
 const app = express();
 
 const PORT = 8000;
 
-// API Routes
 
-// GET /api/notes
-// get data somehow from db.json
-// return res.json(data)
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
-// POST .api/notes
-// receive JSONN obj from the front end
-// return res.status(200).end();
+app.get("/", function(req, res) {
+    res.sendFile(path.join(__dirname, 'public', "index.html"));
+  });
+  app.get("/notes", function(req, res) {
+    res.sendFile(path.join(__dirname, 'public', "notes.html"));
+  });
+  
+app.get("/api/notes", function (req, res) {
 
-// DELETE /api/notes/:id
+
+});
 
 
-// HTML Routes
+
+app.post("/api/notes", function (req, res) {
+
+    var newNoteEntry = req.body;
+
+    newNoteEntry.id = note.length+1;
+
+    console.log(newNoteEntry);
+
+    note.push(newNoteEntry);
+
+
+
+    fs.writeFileSync("./db/db.json", JSON.stringify(note), function (err) {
+
+        if (err)
+            throw (err)
+
+    });
+
+    return res.status(200).end();
+});
+
+
+app.delete("/api/notes/:id", function (req, res) {
+
+
+note = note.filter(note => note.id != req.params.id);
+    
+
+fs.writeFileSync("./db/db.json", JSON.stringify(note), "UTF8", function (err) {
+
+    if (err)
+        throw (err)
+
+})
+
+
+return res.json(note);
+
+});
+
+
+app.use(express.static("public"))
+
 app.get("/notes", (req, res) => {
     res.sendFile(path.join(__dirname, "notes.html"));
 });
@@ -32,5 +80,6 @@ app.get("*", (req, res) => {
 
 
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}/`);
+    console.log("test")
+    console.log(`The server is running on http://localhost:${PORT}/`);
 });
