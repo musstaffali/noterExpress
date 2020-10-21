@@ -1,85 +1,88 @@
-const path = require("path");
 const fs = require("fs");
 const express = require("express");
 const app = express();
+const path = require("path");
+
 
 const PORT = process.env.PORT || 8000;
 
 
-app.use(express.urlencoded({ extended: true }));
+// App to handle data parsing
+app.use(express.urlencoded({extended: true}));
+
 app.use(express.json());
 
-app.get("/", function(req, res) {
-    res.sendFile(path.join(__dirname, 'public', "index.html"));
-  });
-  app.get("/notes", function(req, res) {
-    res.sendFile(path.join(__dirname, 'public', "notes.html"));
-  });
-  
-app.get("/api/notes", function (req, res) {
 
+// css links public folder
+app.use(express.static(path.join(__dirname, "public")));
 
+// Homepage
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-
-
-app.post("/api/notes", function (req, res) {
-
-    var newNoteEntry = req.body;
-
-    newNoteEntry.id = note.length+1;
-
-    console.log(newNoteEntry);
-
-    note.push(newNoteEntry);
-
-
-
-    fs.writeFileSync("./db/db.json", JSON.stringify(note), function (err) {
-
-        if (err)
-            throw (err)
-
-    });
-
-    return res.status(200).end();
-});
-
-
-app.delete("/api/notes/:id", function (req, res) {
-
-
-note = note.filter(note => note.id != req.params.id);
-    
-
-fs.writeFileSync("./db/db.json", JSON.stringify(note), "UTF8", function (err) {
-
-    if (err)
-        throw (err)
-
-})
-
-
-return res.json(note);
-
-});
-
-
-app.use(express.static("public"))
-
+// Note List
 app.get("/notes", (req, res) => {
-    res.sendFile(path.join(__dirname, "notes.html"));
+    res.sendFile(path.join(__dirname, "public", "notes.html"));
+    console.log("your on note taker page");
 });
 
 
-// get * => index.html
-app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "index.html"));
+// Route notes as json in the MYSQL
+app.get("/api/notes", (err, res) => {
+    let newNotes;
+    try {
+        newNotes = fs.readFileSync("db/db.json", "utf8");
+        newNotes = JSON.parse(newNotes);
+        console.log(newNotes);
+    } catch (err) {
+        console.log("\n error(in app.get.catch):");
+        console.error(err);
+    }
+    res.json(newNotes);
+});
+
+//Notes store in MYSQL
+app.post("/api/notes", (req, res) => {
+    try {
+        newNotes = fs.readFileSync("db/db.json", "utf8");
+        newNotes = JSON.parse(newNotes);
+
+        // data presented in body
+        newNotes.push(req.body)
+
+        newNotes = JSON.stringify(newNotes);
+
+        // Gather string for user
+        fs.writeFile("db/db.json", newNotes, "utf8", function (err) {
+            if (err) 
+            throw err;
+        });
+      console.log(newNotes);
+
+    }
+    catch (err) {
+        console.log("\n error(in app.post.catch):");
+        console.error(err);
+    }
+    res.json(JSON.parse(newNotes));
+
 });
 
 
+// Delete
+app.delete("/api/notes/:id", (req, res) => {
 
+    let newNotes = []
+    newNotes.splice(req.params.id);
+    fs.writeFile("db/db.json", JSON.stringify(newNotes), "utf8", function (err) {
+        console.log(err);
+    });
+    res.json(newNotes);
+});
+
+// Server is listening 
 app.listen(PORT, () => {
-    console.log("test")
-    console.log(`The server is running on http://localhost:${PORT}/`);
+    console.log("the server is listening on PORT: " + PORT);
 });
+
